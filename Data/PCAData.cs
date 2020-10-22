@@ -32,7 +32,7 @@ namespace FinderOfStandarts.Data
                     var line = reader.ReadLine();
                     objects.Add(new ObjectData()
                     {
-                        Data = Array.ConvertAll(line.Split(' '), x => decimal.Parse(x, CultureInfo.InvariantCulture)),
+                        Data = Array.ConvertAll(line.Split(' '), x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)),
                         Index = ind++
                     });
                 }

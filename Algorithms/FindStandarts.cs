@@ -42,14 +42,14 @@ namespace FinderOfStandarts.Algorithms
         {
             log.WriteLine("====FindStandarts BEGIN====");
 
-            System.Console.WriteLine($"Enabled features: {string.Join(", ", set.Features.Where(w => w.IsActive))}");
+            // System.Console.WriteLine($"Enabled features: {string.Join(", ", set.Features.Where(w => w.IsActive))}");
 
             decimal[,] dist = Utils.DistanceUtils.FindAllDistance(set, distFunc);
 
-            for (int i = 0; i < set.Objects.Count; i++)
-            {
-                System.Console.WriteLine($"{dist[0, i]:0.00000}");
-            }
+            // for (int i = 0; i < set.Objects.Count; i++)
+            // {
+            //     System.Console.WriteLine($"{dist[0, i]:0.00000}");
+            // }
 
             var excludedObjects = new HashSet<int>();
 

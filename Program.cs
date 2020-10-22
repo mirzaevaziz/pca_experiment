@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using FinderOfStandarts.Models;
 
 namespace pca_experiment1
@@ -63,40 +64,36 @@ namespace pca_experiment1
                 var dir = new System.IO.DirectoryInfo("Result files");
                 if (!dir.Exists)
                     dir.Create();
-                var dirOfSets = new DirectoryInfo(Path.Combine("Data", "PcaFiles"));
-                var sbResult = new StringBuilder();
-                sbResult.AppendLine($"Name & Stability & Noisy objects & Standart objects & Groups");
-                foreach (var f in dirOfSets.EnumerateFiles())
-                {
-                    var set = new FinderOfStandarts.Data.PCAData().GetObjectSet(Convert.ToInt32(f.Name.Replace(".txt", "")), classValue);
 
-                    var fileName = $"Log - {DateTime.Now.ToString("dd.MM.yyyy HH-mm-ss")} {set.Name} class-{classValue} metric - {distFunc.GetType().Name} normalization - {normProvider?.GetType().Name ?? "No normalization"}.txt";
-
-                    using (var log = new System.IO.StreamWriter(System.IO.Path.Combine(dir.Name, fileName)))
+                Parallel.For(0, 485, i =>
                     {
-                        log.WriteLine(set);
-                        log.WriteLine($"Class value = {classValue}");
-                        log.WriteLine($"Metric = {distFunc.GetType().Name}");
+                        var set = new FinderOfStandarts.Data.PCAData().GetObjectSet(i + 1, classValue);
 
-                        if (normProvider != null)
+                        var fileName = $"Log - {DateTime.Now.ToString("dd.MM.yyyy HH-mm-ss")} {set.Name} class-{classValue} metric - {distFunc.GetType().Name} normalization - {normProvider?.GetType().Name ?? "No normalization"}.txt";
+
+                        using (var log = new System.IO.StreamWriter(System.IO.Path.Combine(dir.Name, fileName)))
                         {
-                            set = normProvider.Normalize(set);
-                        }
-                        Console.WriteLine($"Normalized by - {normProvider?.GetType().Name ?? "No normalization"}");
-                        log.WriteLine($"Normalized by - {normProvider?.GetType().Name ?? "No normalization"}");
-                        if (normProvider != null)
-                        {
-                            set = normProvider.Normalize(set);
+                            log.WriteLine(set);
+                            log.WriteLine($"Class value = {classValue}");
+                            log.WriteLine($"Metric = {distFunc.GetType().Name}");
+
+                            if (normProvider != null)
+                            {
+                                set = normProvider.Normalize(set);
+                            }
+                            log.WriteLine($"Normalized by - {normProvider?.GetType().Name ?? "No normalization"}");
+                            if (normProvider != null)
+                            {
+                                set = normProvider.Normalize(set);
+                            }
+
+                            var result = FinderOfStandarts.Algorithms.FindStandarts.Find(set, distFunc.Calculate, log);
+                            log.WriteLine($"Name & Stability & Noisy objects & Standart objects & Groups");
+                            log.WriteLine($"{set.Name} & {result.Stability:0.00000} & {result.ExcludedObjects.Count} & {result.Standarts.Count} & {result.Groups.Count}");
                         }
 
-                        var result = FinderOfStandarts.Algorithms.FindStandarts.Find(set, distFunc.Calculate, log);
-                        sbResult.AppendLine($"{f.Name} & {result.Stability:0.00000} & {result.ExcludedObjects.Count} & {result.Standarts.Count} & {result.Groups.Count}");
-                    }
-
-                    System.Console.WriteLine($"Result in file \"{fileName}\".");
-                    break;
-                }
-                File.WriteAllText(System.IO.Path.Combine(dir.Name, $"Summary - {DateTime.Now.ToString("dd.MM.yyyy HH-mm-ss")} class-{classValue} metric - {distFunc.GetType().Name} normalization - {normProvider?.GetType().Name ?? "No normalization"}.txt"), sbResult.ToString());
+                        System.Console.WriteLine($"Result in file \"{fileName}\".");
+                    });
 
                 System.Console.WriteLine("For quit type q or Q:");
             } while (Console.ReadLine().ToLower() != "q");

@@ -13,41 +13,52 @@ namespace FinderOfStandarts.Methods
                                            HashSet<int> excludedObjects,
                                            decimal[,] distances)
         {
-            var objects = groups.SelectMany(s => s).ToHashSet<int>();
-            System.Console.WriteLine("Finding standart objects...");
+            var objects = groups.SelectMany(s => s).ToHashSet<int>().Except(excludedObjects);
+            var standartObjects = spheres.Where(w => objects.Contains(w.ObjectIndex.Value))
+                                        .OrderBy(o => o.Radius)
+                                        .Select(s => new
+                                        {
+                                            ObjectIndex = s.ObjectIndex.Value,
+                                            Radius = s.Radius,
+                                        }).ToList();
+            // System.Console.WriteLine("Finding standart objects...");
             foreach (var group in groups.OrderByDescending(o => o.Count))
             {
-                var candidates = spheres.Where(w => group.Contains(w.ObjectIndex.Value))
-                                        .OrderBy(o => o.Radius)
-                                        .Select(s => s.ObjectIndex.Value);
-
+                var candidates = standartObjects.Where(w => group.Contains(w.ObjectIndex))
+                                                .OrderBy(o => o.Radius).ToArray();
 
                 foreach (var candidate in candidates)
                 {
-
-                    excludedObjects.Add(candidate);
+                    // System.Console.WriteLine($"Candidate for deleting is {candidate:000}");
+                    standartObjects.Remove(candidate);
                     foreach (var obj in objects)
                     {
-                        var ss = objects.Except(excludedObjects).Select(s => new
+                        decimal? minDistance = null;
+                        bool isWrongRecognition = false;
+                        foreach (var st in standartObjects)
                         {
-                            ObjectIndex = s,
-                            Distance = distances[obj, s] / spheres.First(f => f.ObjectIndex == s).Radius,
-                            Class = set.Objects[s][set.ClassFeatureIndex]
-                        }).OrderBy(o => o.Distance);
-
-                        var minDistance = ss.Min(m => m.Distance);
-
-                        bool isWrongRecognition = ss.Where(w => w.Distance == minDistance).Any(a => set.Objects[a.ObjectIndex][set.ClassFeatureIndex] != set.Objects[obj][set.ClassFeatureIndex]);
+                            var dist = distances[obj, st.ObjectIndex] / st.Radius;
+                            if (!minDistance.HasValue || minDistance > dist)
+                            {
+                                minDistance = dist;
+                                isWrongRecognition = set.Objects[st.ObjectIndex][set.ClassFeatureIndex] != set.Objects[obj][set.ClassFeatureIndex];
+                            }
+                            else if (dist == minDistance)
+                            {
+                                isWrongRecognition = isWrongRecognition || set.Objects[st.ObjectIndex][set.ClassFeatureIndex] != set.Objects[obj][set.ClassFeatureIndex];
+                            }
+                        }
 
                         if (isWrongRecognition)
                         {
-                            excludedObjects.Remove(candidate);
+                            standartObjects.Add(candidate);
+                            // System.Console.WriteLine($"Candidate for deleting {candidate:000} NOT DELETED");
                             break;
                         }
                     }
                 }
             }
-            return objects.Except(excludedObjects).ToHashSet<int>();
+            return standartObjects.Select(s => s.ObjectIndex).ToHashSet<int>();
         }
     }
 }
