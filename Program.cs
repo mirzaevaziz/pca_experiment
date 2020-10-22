@@ -17,6 +17,28 @@ namespace pca_experiment1
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
 
+            // var dir = new System.IO.DirectoryInfo("Result files");
+            // var sb = new StringBuilder();
+            // sb.AppendLine("Name & Stability & Noisy objects & Standart objects & Groups");
+            // foreach (var fi in dir.EnumerateFiles())
+            // {
+            //     using (StreamReader sr = new StreamReader(fi.FullName))
+            //     {
+            //         string line;
+            //         while (!sr.EndOfStream)
+            //         {
+            //             line = sr.ReadLine();
+            //             if (sr.Peek() == -1)
+            //             {
+            //                 Console.WriteLine(line);
+            //                 sb.AppendLine(line);
+            //             }
+            //         }
+            //     }
+            // }
+            // File.WriteAllText(Path.Combine(dir.FullName, "Summary.txt"), sb.ToString());
+            // System.Console.WriteLine(sb.ToString());
+
             var distFuncs = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
                     .Where(x => typeof(IMetric).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract).ToList();
 
